@@ -66,20 +66,42 @@ jobs:
           echo "No network API in the bundle, and the policy still forbids one."
 
       - name: Assert nothing but the theme reaches storage
+        # A register is a list of an organisation's unmitigated weaknesses. It
+        # lives in memory for as long as the tab is open and nowhere else, and
+        # there is no code that persists any part of it.
         run: |
           set -e
-          hits=$(grep -roE "(localStorage|sessionStorage|indexedDB)\.[a-zA-Z]+" src/ public/ | grep -v '\.test\.' || true)
-          echo "$hits"
-          if echo "$hits" | grep -qE "(setItem|put|add)" && ! echo "$hits" | grep -q "parallax.theme"; then
-            echo "::error::Something other than the theme is being written to storage."
-            exit 1
-          fi
-          count=$(grep -roE "(localStorage|sessionStorage|indexedDB)\." src/ public/ | grep -v '\.test\.' | wc -l)
-          [ "$count" -le 3 ] || {
-            echo "::error::More storage access than the theme bootstrap needs ($count references)."
+          echo "Storage references outside tests:"
+          grep -rnoE "(localStorage|sessionStorage|indexedDB)\.[a-zA-Z]+" src/ public/ \
+            | grep -v '\.test\.' || true
+
+          # There must be exactly one write, and it must write THEME_KEY.
+          writes=$(grep -rnoE "(localStorage|sessionStorage|indexedDB)\.(setItem|put|add|setMany)\([^)]*" src/ public/ \
+            | grep -v '\.test\.' || true)
+          count=$(printf '%s' "$writes" | grep -c . || true)
+          [ "$count" -eq 1 ] || {
+            echo "::error::Expected exactly one storage write, found $count:"
+            printf '%s\n' "$writes"
             exit 1
           }
-          echo "Storage access is limited to the theme."
+          printf '%s\n' "$writes" | grep -q "THEME_KEY" || {
+            echo "::error::The single storage write does not write THEME_KEY:"
+            printf '%s\n' "$writes"
+            exit 1
+          }
+          grep -q "export const THEME_KEY = 'parallax.theme'" src/state.ts || {
+            echo "::error::THEME_KEY no longer holds 'parallax.theme'."
+            exit 1
+          }
+
+          # And nothing may read storage beyond the theme bootstrap and the app.
+          reads=$(grep -rcoE "(localStorage|sessionStorage|indexedDB)\.getItem" src/ public/ \
+            | grep -v '\.test\.' | awk -F: '{ total += $2 } END { print total + 0 }')
+          [ "$reads" -le 1 ] || {
+            echo "::error::More storage reads than the theme bootstrap needs ($reads)."
+            exit 1
+          }
+          echo "Storage access is one write and one read, both of the theme."
 
       - name: Assert the CLI runs with no build step and no dependencies
         run: |
