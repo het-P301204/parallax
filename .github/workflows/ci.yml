@@ -104,14 +104,16 @@ jobs:
           echo "Storage access is one write and one read, both of the theme."
 
       - name: Assert the CLI runs with no build step and no dependencies
+        # `--fail-on none` throughout: the demo register has confirmed
+        # inversions, so every command here exits 2 by design. That the exit
+        # codes mean what the documentation says is asserted in the next step,
+        # which is where it belongs.
         run: |
           set -e
           node bin/parallax.ts version
-          node bin/parallax.ts measurement fixtures/demo-register.csv > /dev/null
-          node bin/parallax.ts compression fixtures/demo-register.csv > /dev/null
-          node bin/parallax.ts inversions fixtures/demo-register.csv > /dev/null
-          node bin/parallax.ts calibration fixtures/demo-register.csv > /dev/null
-          node bin/parallax.ts shortlist fixtures/demo-register.csv > /dev/null
+          for command in measurement compression inversions calibration shortlist; do
+            node bin/parallax.ts "$command" fixtures/demo-register.csv --fail-on none > /dev/null
+          done
           echo "The CLI ran from source."
 
       - name: Assert the exit codes are usable in a pipeline
