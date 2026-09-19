@@ -1,0 +1,6 @@
+id,title,likelihood,impact
+R-1,seven,7,3
+R-2,not a number,N/A,3
+R-3,blank,,3
+R-4,fractional,3.5,3
+R-5,zero,0,3

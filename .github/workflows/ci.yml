@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # 24 for the CLI: it runs the engine's TypeScript sources directly
+          # through Node's native type stripping, with no build step.
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # ----------------------------------------------------------------------
+      # Everything below asserts a claim the product makes, rather than that it
+      # compiles. A claim nothing checks is a claim nobody should believe.
+      # ----------------------------------------------------------------------
+
+      - name: Assert the register never leaves the tab
+        # The strongest claim PARALLAX makes. `connect-src 'none'` is enforced
+        # by the browser, but a bundle containing a network API would mean the
+        # claim rested entirely on a meta element somebody could remove.
+        run: |
+          set -e
+          if grep -rohE '\b(XMLHttpRequest|WebSocket|EventSource|sendBeacon)\b' dist/assets/*.js | sort -u | grep .; then
+            echo "::error::The built bundle references a network API."
+            exit 1
+          fi
+          if grep -roE '[^a-zA-Z.]fetch\(' dist/assets/*.js | head -1 | grep .; then
+            echo "::error::The built bundle contains a fetch call."
+            exit 1
+          fi
+          grep -q "connect-src 'none'" dist/index.html || {
+            echo "::error::The Content Security Policy no longer forbids network connections."
+            exit 1
+          }
+          echo "No network API in the bundle, and the policy still forbids one."
+
+      - name: Assert nothing but the theme reaches storage
+        run: |
+          set -e
+          hits=$(grep -roE "(localStorage|sessionStorage|indexedDB)\.[a-zA-Z]+" src/ public/ | grep -v '\.test\.' || true)
+          echo "$hits"
+          if echo "$hits" | grep -qE "(setItem|put|add)" && ! echo "$hits" | grep -q "parallax.theme"; then
+            echo "::error::Something other than the theme is being written to storage."
+            exit 1
+          fi
+          count=$(grep -roE "(localStorage|sessionStorage|indexedDB)\." src/ public/ | grep -v '\.test\.' | wc -l)
+          [ "$count" -le 3 ] || {
+            echo "::error::More storage access than the theme bootstrap needs ($count references)."
+            exit 1
+          }
+          echo "Storage access is limited to the theme."
+
+      - name: Assert the CLI runs with no build step and no dependencies
+        run: |
+          set -e
+          node bin/parallax.ts version
+          node bin/parallax.ts measurement fixtures/demo-register.csv > /dev/null
+          node bin/parallax.ts compression fixtures/demo-register.csv > /dev/null
+          node bin/parallax.ts inversions fixtures/demo-register.csv > /dev/null
+          node bin/parallax.ts calibration fixtures/demo-register.csv > /dev/null
+          node bin/parallax.ts shortlist fixtures/demo-register.csv > /dev/null
+          echo "The CLI ran from source."
+
+      - name: Assert the exit codes are usable in a pipeline
+        # 0 clean, 2 something reached the threshold, 1 could not analyse.
+        # A measurement audit that cannot fail a build is one nobody runs twice.
+        run: |
+          set +e
+          node bin/parallax.ts audit fixtures/demo-register.csv --quiet
+          findings=$?
+          node bin/parallax.ts audit fixtures/demo-register.csv --quiet --fail-on none
+          ignored=$?
+          node bin/parallax.ts audit ./does-not-exist.csv --quiet > /dev/null 2>&1
+          missing=$?
+          node bin/parallax.ts audit fixtures/malformed/unterminated-quote.csv --quiet > /dev/null 2>&1
+          malformed=$?
+          set -e
+          [ "$findings" -eq 2 ] || { echo "::error::Expected exit 2 for a register with confirmed inversions, got $findings."; exit 1; }
+          [ "$ignored" -eq 0 ]  || { echo "::error::Expected exit 0 with --fail-on none, got $ignored."; exit 1; }
+          [ "$missing" -eq 1 ]  || { echo "::error::Expected exit 1 for an unreadable path, got $missing."; exit 1; }
+          [ "$malformed" -eq 1 ]|| { echo "::error::Expected exit 1 for a malformed register, got $malformed."; exit 1; }
+          echo "Exit codes behave as documented."
+
+      - name: Assert the analysis is reproducible
+        # No export carries a timestamp precisely so that this holds, which is
+        # what makes a diff between two exports a diff of the register.
+        run: |
+          set -e
+          node bin/parallax.ts export fixtures/demo-register.csv full-report --quiet --fail-on none --out /tmp/a.json
+          node bin/parallax.ts export fixtures/demo-register.csv full-report --quiet --fail-on none --out /tmp/b.json
+          diff /tmp/a.json /tmp/b.json || {
+            echo "::error::Two audits of the same register produced different output."
+            exit 1
+          }
+          echo "The audit is reproducible."
+
+      - name: Assert the generated artifacts match their generators
+        run: |
+          node scripts/make-demo.ts --check
+          node scripts/make-fixtures.ts --check
+          node scripts/error-pages.ts --check
+
+      - name: Assert the documentation numbers match the engine
+        run: node scripts/docs-numbers.ts --check

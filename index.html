@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PARALLAX — risk register measurement auditor</title>
+    <meta
+      name="description"
+      content="Find where your risk numbers cannot support the decisions built on them. PARALLAX audits the measurement method behind a qualitative risk register — ordinal validity, range compression, rank inversion, assessor calibration — and triages the few risks worth quantifying."
+    />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#090B0F" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+
+    <!--
+      A risk register is a list of an organisation's unmitigated weaknesses
+      with owners' names against them. PARALLAX claims one never leaves this
+      tab; the policy below is the browser enforcing that claim rather than the
+      README asserting it. `connect-src 'none'` means this page cannot make a
+      network request even if a future change tried to, and nothing may be
+      loaded from any origin but this one.
+
+      `style-src 'unsafe-inline'` is required because the app sets computed
+      inline styles -- an interval's position on a log axis, a histogram
+      column's height, a depth plane's offset. Those are numbers produced by
+      the analysis, never text taken from an imported file.
+
+      `frame-ancestors` is deliberately absent: a browser ignores it when it
+      arrives in a meta element, so claiming it here would be theatre. It
+      belongs in a response header, and SECURITY.md says which one.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'"
+    />
+
+    <style>
+      /* Painted before the bundle parses, so the first frame is not white. */
+      html {
+        background: #090b0f;
+      }
+      html[data-theme='light'] {
+        background: #f2f5f9;
+      }
+      #root:empty::after {
+        content: '';
+        display: block;
+        height: 100vh;
+      }
+    </style>
+
+    <!--
+      Deliberately not `type="module"`, which Vite will warn about. A module
+      script is deferred, and a deferred theme bootstrap runs after first paint
+      -- the one thing this tag exists to prevent. It is a separate file rather
+      than inline so the policy can stay `script-src 'self'` with no
+      `unsafe-inline` and no hash to keep in sync.
+    -->
+    <script src="./theme.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div
+        style="
+          max-width: 40rem;
+          margin: 4rem auto;
+          padding: 0 1.5rem;
+          font: 400 15px/1.6 system-ui, sans-serif;
+          color: #bbc5d3;
+        "
+      >
+        <h1 style="font-size: 1.5rem; color: #f0f4f9">PARALLAX needs JavaScript</h1>
+        <p>
+          The entire analysis runs in this tab — the register is parsed, audited and simulated on
+          your machine, and nothing is uploaded anywhere. That design is the reason there is no
+          server to render this page for you.
+        </p>
+        <p>
+          The same analysis is available without a browser:
+          <code style="font-family: ui-monospace, monospace">npx parallax audit register.csv</code>.
+        </p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+# Text files get LF in the repository regardless of the checkout platform, so
+# the generated-artifact checks in CI compare the same bytes everywhere.
+* text=auto eol=lf
+
+# The malformed fixtures are exact byte sequences the importer has to survive
+# -- a lone CR inside a quoted field, a UTF-8 BOM, an unterminated quote. Line
+# ending translation would repair the very thing they exist to test.
+fixtures/malformed/** binary
+
+# The demo register is written with CRLF, because that is what RFC 4180
+# specifies and what a real export contains. `scripts/make-demo.ts --check`
+# compares it byte for byte against its generator, so a checkout that
+# translated its line endings would fail CI on a file nobody had touched.
+fixtures/demo-register.csv binary
+*.png binary
+*.woff2 binary
+
+# Generated, and verified against its generator by CI. Collapsed in review.
+src/demo-register.generated.ts linguist-generated=true
+public/40*.html linguist-generated=true
+public/500.html linguist-generated=true

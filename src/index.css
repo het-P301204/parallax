@@ -1,0 +1,296 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------------ */
+/* Tokens                                                                     */
+/*                                                                            */
+/* Dark is the primary identity: a graphite instrument surface where the only */
+/* saturated pixels on screen carry a finding's state. Light is specified     */
+/* independently -- the accents are darkened for contrast against paper       */
+/* rather than reused, and the surface stack runs the other way (paper is     */
+/* lightest at the base; panels lift by acquiring a hairline rather than by   */
+/* getting brighter).                                                         */
+/*                                                                            */
+/* `src/ui/tokens.test.ts` re-derives the WCAG contrast of every ink tier and */
+/* every state hue from these triplets, in both themes, and fails the build   */
+/* if one drops below 4.5:1 against the lightest surface it can sit on. The   */
+/* numbers in the comments below are that test's output, not an estimate.     */
+/* ------------------------------------------------------------------------ */
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-0: 9 11 15; /* #090B0F page */
+  --surface-1: 15 18 24; /* #0F1218 panels */
+  --surface-2: 20 24 32; /* #141820 rows, raised */
+  --surface-3: 27 32 42; /* #1B202A hover, inputs */
+  --surface-inset: 6 8 11; /* wells, raw values, code */
+
+  --line-1: 30 36 47;
+  --line-2: 43 51 66;
+  --line-3: 64 76 96;
+
+  /* Four text tiers, each measured against --surface-3 (the hovered row --
+     the lightest surface any of them sits on) rather than against the page,
+     because a row that fails contrast on hover fails while it is being read.
+     Measured: 13.6 / 9.7 / 7.0 / 4.7. A fourth tier nobody can read is
+     decoration rather than hierarchy, so ink-3 is held above AA too. */
+  --ink-0: 240 244 249;
+  --ink-1: 187 197 211;
+  --ink-2: 159 171 189;
+  --ink-3: 125 138 158;
+
+  /* Blue is analysis: structure, navigation, the act of measuring. It never
+     means "bad" and never means "good". */
+  --accent: 86 182 240;
+  --accent-strong: 146 212 250;
+  --accent-dim: 30 84 122;
+
+  /* Cyan is quantitative information: intervals, distributions, anything
+     expressed in money or events per year rather than in levels. */
+  --quant: 74 206 214;
+  --quant-strong: 138 224 230;
+
+  /* Tuned to spread the five hues as far apart in luminance as the AA
+     requirement allows. The closest pair still sits at about 1.04:1, which is
+     why every state also carries a glyph -- see src/ui/tokens.ts. */
+  --state-supported: 70 208 148;
+  --state-ambiguous: 222 160 66;
+  --state-distorted: 234 98 96;
+  --state-quantify: 172 139 248;
+  --state-insufficient: 132 146 167;
+
+  --shadow-alpha-1: 0.5;
+  --shadow-alpha-2: 0.72;
+
+  --grid-line: 255 255 255;
+  --grid-alpha: 0.02;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Paper, then white panels on it, then a perceptibly cooler grey for rows
+     and hover -- far enough apart that a hovered row and a raised surface do
+     not read as the same plane. */
+  --surface-0: 242 245 249;
+  --surface-1: 255 255 255;
+  --surface-2: 246 249 252;
+  --surface-3: 236 241 247;
+  --surface-inset: 240 244 249;
+
+  --line-1: 225 230 237;
+  --line-2: 204 212 223;
+  --line-3: 166 178 194;
+
+  /* The same discipline on paper, measured against --surface-3, the darkest
+     surface text sits on: 15.6 / 9.0 / 6.7 / 5.1. */
+  --ink-0: 13 17 23;
+  --ink-1: 55 67 83;
+  --ink-2: 73 85 103;
+  --ink-3: 91 103 121;
+
+  --accent: 11 108 176;
+  --accent-strong: 8 82 136;
+  --accent-dim: 176 212 238;
+
+  --quant: 9 105 116;
+  --quant-strong: 7 82 92;
+
+  /* Darkened for paper rather than reused. Green and cyan are deliberately
+     separated in luminance as well as hue, because a reader who cannot
+     separate teal from green sees only the luminance difference. */
+  --state-supported: 9 122 80;
+  --state-ambiguous: 146 90 5;
+  --state-distorted: 190 42 50;
+  --state-quantify: 100 56 197;
+  --state-insufficient: 90 102 120;
+
+  --shadow-alpha-1: 0.08;
+  --shadow-alpha-2: 0.17;
+
+  --grid-line: 13 17 23;
+  --grid-alpha: 0.032;
+}
+
+@layer base {
+  * {
+    border-color: rgb(var(--line-1));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-surface-0 text-ink-0 font-sans text-base antialiased;
+    font-feature-settings: 'cv05' 1, 'ss03' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Figures in tables, intervals, percentiles and counters have to line up
+     column to column or the reader cannot compare them by eye. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  ::selection {
+    background: rgb(var(--accent) / 0.28);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-2)) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: rgb(var(--line-2));
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  .scroll-thin:hover::-webkit-scrollbar-thumb {
+    background: rgb(var(--line-3));
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* The faint engineering grid behind the signature diagram and the hero.
+     It is structure rather than decoration: the matrix and the continuous
+     axis both land on it, which is what makes the parallax separation read
+     as movement across one space instead of two unrelated panels. */
+  .grid-field {
+    background-image:
+      linear-gradient(rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* INSUFFICIENT DATA is hatched everywhere it appears, so "we could not
+     tell" is legible in greyscale and to a reader who cannot separate the
+     slate from the ink around it. It is the one state that must never be
+     carried by colour. */
+  .hatch {
+    background-image: repeating-linear-gradient(-45deg, currentColor 0 1px, transparent 1px 5px);
+  }
+
+  /* INCONSISTENT shares amber with AMBIGUOUS and is separated by treatment:
+     a dotted rule rather than a solid one. */
+  .rule-dotted {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      currentColor 0 3px,
+      transparent 3px 6px
+    );
+  }
+
+  .truncate-flex {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Signature motion                                                        */
+  /*                                                                         */
+  /* The parallax separation is built from three primitives that always run  */
+  /* in this order: the matrix plate lifts, the depth planes slide back to   */
+  /* their own distances, and the interval spans grow from their centres.    */
+  /* Each plane's distance comes from `--depth`, which the component sets    */
+  /* from the data -- the risk's rank inside the cell -- so the depth        */
+  /* ordering is information rather than decoration.                         */
+  /* ---------------------------------------------------------------------- */
+
+  .px-plane {
+    transform: translate3d(calc(var(--px-shift, 0) * var(--depth, 0) * 0.01px), 0, 0);
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+
+  .px-trace {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw-in 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes draw-in {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* A value that has just changed gets one short flash of the accent behind
+     it. Long enough to catch the eye, short enough that a filter sweep does
+     not turn the table into a light show. */
+  .flash-once {
+    animation: flash-once 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes flash-once {
+    0% {
+      background-color: rgb(var(--accent) / 0.16);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Reduced motion                                                             */
+/*                                                                            */
+/* Motion in PARALLAX carries meaning: a cell separating into the intervals   */
+/* it was hiding, a distribution filling as the simulation runs, a stage       */
+/* resolving. Under `prefers-reduced-motion` the motion collapses to a fast    */
+/* cross-fade rather than disappearing, so the same state change is still      */
+/* announced -- it just stops travelling.                                      */
+/* ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 90ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .px-plane {
+    transform: none !important;
+  }
+
+  .motion-fade {
+    animation: fade-in 120ms linear both !important;
+  }
+}
