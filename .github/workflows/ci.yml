@@ -13,7 +13,12 @@ permissions:
 jobs:
   verify:
     name: Lint, typecheck, test, build
-    runs-on: ubuntu-latest
+    # Pinned rather than `ubuntu-latest`, which migrates to Ubuntu 26 in
+    # October 2026 without asking. This pipeline asserts that two audits of the
+    # same register produce byte-identical output; an unannounced change of
+    # operating system underneath that claim is precisely the kind of silent
+    # variable it exists to rule out. Bump it deliberately, and read the diff.
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
