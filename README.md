@@ -6,7 +6,7 @@
 
 *Find where your risk numbers cannot support the decisions built on them.*
 
-[Methodology](docs/methodology.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+**[Live demo](https://het-p301204.github.io/parallax/)** · [Methodology](docs/methodology.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 ![PARALLAX](docs/parallax-hero.png)
 
@@ -31,6 +31,12 @@ actually change a decision.
 ```bash
 npx parallax audit register.csv
 ```
+
+**Try it:** the app runs entirely in the browser, so the live site is the real
+thing, not a preview: [het-p301204.github.io/parallax](https://het-p301204.github.io/parallax/).
+Click **Load the sample register**, or open your own. The page's Content
+Security Policy forbids network connections, so a register you open never
+leaves the tab.
 
 ---
 
